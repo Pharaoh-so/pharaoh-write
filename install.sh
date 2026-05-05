@@ -111,14 +111,16 @@ if (( DRY_RUN == 0 )); then
 fi
 
 # is_rule_file <path> - returns 0 if the path is a rule file (subject to --sync-rules overwrite)
-# Rule files: SKILL.md, phrase-blacklist.md, agents/*.md
+# Rule files: SKILL.md, phrase-blacklist.md, check.py, agents/*.md, commands/*.md
 # Voice corpus and BRIEF_TEMPLATE.md are NOT rule files.
 is_rule_file() {
   local path="$1"
   case "${path}" in
     */SKILL.md) return 0 ;;
     */phrase-blacklist.md) return 0 ;;
+    */check.py) return 0 ;;
     */agents/*.md) return 0 ;;
+    */commands/*.md) return 0 ;;
     *) return 1 ;;
   esac
 }
