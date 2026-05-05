@@ -404,56 +404,59 @@ Run this before publishing:
 
 ---
 
-## SECTION 6: Enforcement Loop (Programmatic Pass)
+## SECTION 6: Enforcement Loop (Mechanical, not vibes)
 
-The Final Checklist above is the human-eye review. This section is what the writer agent must run programmatically before returning a draft. The agent has historically failed to actually enforce the rules on its own output even when it claims to have run a final pass — because the "pass" is vibes-based.
+The Final Checklist above is the human-eye review. This section is what the writer agent must invoke programmatically before returning a draft. The agent has historically failed to actually enforce these rules — because "I ran the final pass" was vibes-based.
 
-This loop is mechanical. It uses tools (grep, character counts, regex) so the check can't be hand-waved.
+This loop runs a real script. The agent can't claim to have run it without invoking it.
 
-### Step 1: Phrase blacklist grep
+### Step 1: Run the check script
 
-Run `grep -Fxf phrase-blacklist.md draft.md` (and against `phrase-blacklist-local.md` if it exists). For every match, rewrite the offending sentence to achieve the same intent without the trope. Don't just delete — rewriting closes the hole.
+Save the draft body (just the post text — no frontmatter, no NOTES sections, no pre-drafted reply scaffolding) to a temp file. Then:
 
-The phrase blacklist file lives next to this SKILL.md at `phrase-blacklist.md`. It contains universal AI tells (closer tropes, formal transitions, formulaic openers) that grep against the draft will catch. Add new entries when a phrase has been published before and shouldn't be reused, or when a new AI tell is identified.
+```bash
+python3 ~/.claude/skills/anti-ai-filter/check.py <draft-body.md> \
+  --format <format-tier> \
+  --voice-anchor <anchor-file>   # if a voice anchor was provided in the brief
+```
 
-### Step 2: Capitalization audit
+`<format-tier>` is one of: `reddit-post-incident`, `reddit-post-essay`, `reddit-reply`, `chat`, `blog-post`, `longform`, `marketing`, `email`. Pick from the format-tier list in `natural-voice/SKILL.md` § Format-Aware Casing Tiers.
 
-Count post-period sentence-starts in the body. Compare against the format-aware target tier from `natural-voice/SKILL.md` § Format-Aware Casing Tiers:
+The script runs five mechanical checks:
+1. **Phrase blacklist grep** — matches against `phrase-blacklist.md` (and `phrase-blacklist-local.md` if present). Any match = fail.
+2. **Capitalization audit** — counts capital sentence-starts vs format-tier target. ±5 percentage points = warn, beyond that = fail.
+3. **Em-dash budget** — counts em (—) + en (–) dashes. Max 1 per 500 words. Over budget = fail.
+4. **Voice anchor leak** — checks 5+ word substrings from the draft against the anchor file. Any match = fail. (Skipped if no anchor provided.)
+5. **Rhythm verification** — each substantial body paragraph (>200 chars) must contain ≥1 rambling sentence (60+ words or 3+ commas without a hard break). Failures listed by paragraph.
 
-- Reddit incident-style post → 5-15% caps target
-- Reddit essay-style post → 50-70% caps target
-- Blog post / longform → 70-90% caps target
-- Casual reply / chat → 5-15% caps target
+Exit code 0 = pass, 1 = fail. Stdout has structured failure messages.
 
-If the draft is outside the target range, adjust. If outside by more than 5 percentage points in either direction, rewrite. The voice anchor (if provided in the brief) is for cadence and structure only — never copy its casing wholesale.
+### Step 2: Fix the failures
 
-### Step 3: Rhythm verification
+For each failure the script flagged:
+- **Phrase blacklist match** → rewrite the offending sentence. Don't just delete — closing the hole matters more than removing the phrase.
+- **Casing outside range** → either capitalize more sentence-starts (if too low) or lowercase some (if too high). Pick natural ones. Don't capitalize "i" mid-sentence; don't lowercase proper nouns.
+- **Em-dash over budget** → replace em/en dashes with single hyphens or restructure as separate sentences.
+- **Voice anchor leak** → rewrite the leaked phrase. Voice anchors are for rhythm and structure, never phrasebanks.
+- **Rhythm gap** → either add a rambling sentence to the flagged paragraph or merge with an adjacent one.
 
-Every body paragraph must contain at least one rambling sentence (60+ words OR 3+ commas without a hard break). If a paragraph is purely short fragments stacked together, the rhythm is its own AI tell. Add a longer breath-sentence somewhere in that paragraph or merge with the next paragraph.
+### Step 3: Repeat until clean
 
-The opposite check: a body paragraph cannot be entirely one long sentence either. Mix lengths. If a paragraph is 4 short fragments and a single long sentence, that's healthy. If it's 5 short fragments OR 1 long sentence, rebalance.
+Re-run the script after each rewrite. Loop until exit code 0.
 
-### Step 4: Em-dash count
+If the loop runs more than 3 iterations without converging, the draft has a structural problem the script can't fix (format mismatch, brief contradictions, audience mismatch). Return the draft with a craft note flagging what wouldn't converge — better to flag than to ship a draft that quietly violates the rules.
 
-Count em-dashes (—) and en-dashes (–) in the draft. Per `natural-voice/SKILL.md`: max 1 per 500 words, only as mid-clause appositive ("the formatter — which you wrote last quarter — is broken"). Sentence connectors and list separators must use single hyphens. If the count is over budget, replace until within budget.
+### Why this matters
 
-### Step 5: Typo budget
+The previous version of this section was prose instructions for the agent to follow ("count capital sentence-starts and verify within target range"). LLMs claim to follow such instructions and don't. A bash invocation of a Python script that exits non-zero on failure can't be faked — the agent either ran the command (visible in tool calls) or didn't.
 
-In casual-register pieces (chat, Reddit, social, founder-voice posts): verify 1 light typo exists in the body (not in load-bearing words, not in the first sentence, not in the closing question). If the draft is grammatically perfect, introduce one acceptable typo per the `natural-voice` typo budget rules.
+Anti-AI thinking belongs at every stage of writing, not just a final pass:
+- **Brief stage:** the brief itself shouldn't dictate casing or treat voice anchors as phrasebanks. The `/write` skill sanitizes briefs before dispatch.
+- **Drafting stage:** the agent's prompt has format-aware casing rules and brief discipline rules baked in.
+- **Self-eval stage:** the rubric checks for AI tells before drafting completes.
+- **Enforcement stage:** this script. Mechanical, deterministic, fast (<1 second), unfakeable.
 
-In formal-register pieces (blog post, marketing, email): verify 0 typos. The draft should be grammatically clean.
-
-### Step 6: Voice anchor leak check
-
-If the brief provided a voice anchor (a sample post or piece in the target voice), grep the draft for verbatim phrases longer than 5 words from the anchor. Voice anchors are for rhythm and structure, not phrasebanks. Any 5+ word string copied from the anchor must be rewritten, even if the phrasing was effective in the anchor.
-
-This is the most-failed check. Agents that load a voice anchor as conditioning will pull signature phrases from it. Block this at the enforcement step, not the drafting step.
-
-### Step 7: Repeat until clean
-
-If any of steps 1-6 triggered a rewrite, run the loop again. Don't return the draft until a full pass produces zero changes.
-
-If the loop runs more than 3 times without converging, the draft probably needs a structural rewrite (the format is wrong, the voice is mismatched to the audience, or the brief itself was self-contradictory). Return the draft with a craft note explaining what wouldn't converge — better to flag than to ship a draft that quietly violates the rules.
+Each stage adds a different filter. None of them alone is enough.
 
 ---
 
