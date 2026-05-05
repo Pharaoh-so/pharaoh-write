@@ -316,7 +316,7 @@ For non-social formats (blog-post, landing-section, cold-dm, internal-doc, chat-
 
 ### Layer 4: Anti-AI Filter (mechanical pass)
 
-After drafting, run the check script and the SECTION 6 enforcement loop in `anti-ai-filter/SKILL.md`. The script (`~/.claude/skills/anti-ai-filter/check.py`) catches phrase-blacklist hits, casing outside format-tier range, em-dash budget overruns, voice-anchor leaks, and rhythm gaps. Loop until clean (max 3 iterations). Don't skip — agent self-eval has historically failed to catch what the script catches.
+After drafting, run the check script and the SECTION 6 enforcement loop in `anti-ai-filter/SKILL.md`. The script (`~/.claude/skills/anti-ai-filter/check.mjs`) catches phrase-blacklist hits, casing outside format-tier range, em-dash budget overruns, voice-anchor leaks, and rhythm gaps. Loop until clean (max 3 iterations). Don't skip — agent self-eval has historically failed to catch what the script catches.
 
 The full skill files (`anti-ai-filter/SKILL.md` for vocabulary, structure, and behavioral patterns + `natural-voice/SKILL.md` for casing, typo budget, em-dash policy) are the canonical reference. The agent prompt doesn't duplicate them.
 

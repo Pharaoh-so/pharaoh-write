@@ -415,10 +415,12 @@ This loop runs a real script. The agent can't claim to have run it without invok
 Save the draft body (just the post text — no frontmatter, no NOTES sections, no pre-drafted reply scaffolding) to a temp file. Then:
 
 ```bash
-python3 ~/.claude/skills/anti-ai-filter/check.py <draft-body.md> \
+node ~/.claude/skills/anti-ai-filter/check.mjs <draft-body.md> \
   --format <format-tier> \
   --voice-anchor <anchor-file>   # if a voice anchor was provided in the brief
 ```
+
+The script is Node.js (zero dependencies — uses standard library only). Anyone running Claude Code already has Node, so nothing extra to install.
 
 `<format-tier>` is one of: `reddit-post-incident`, `reddit-post-essay`, `reddit-reply`, `chat`, `blog-post`, `longform`, `marketing`, `email`. Pick from the format-tier list in `natural-voice/SKILL.md` § Format-Aware Casing Tiers.
 

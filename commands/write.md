@@ -72,7 +72,7 @@ Agent({
 })
 ```
 
-The agent runs in isolation, applies the strategic hierarchy (content-frameworks → natural-voice → short-reply if applicable → anti-ai-filter), runs its 10-question rubric and deconstructor pass, runs the **mechanical check script** at `~/.claude/skills/anti-ai-filter/check.py`, and returns a draft + craft notes.
+The agent runs in isolation, applies the strategic hierarchy (content-frameworks → natural-voice → short-reply if applicable → anti-ai-filter), runs its 10-question rubric and deconstructor pass, runs the **mechanical check script** at `~/.claude/skills/anti-ai-filter/check.mjs`, and returns a draft + craft notes.
 
 The check script is the load-bearing enforcement layer. The agent's self-eval can be vibes-based; the script can't be faked.
 

@@ -118,7 +118,7 @@ is_rule_file() {
   case "${path}" in
     */SKILL.md) return 0 ;;
     */phrase-blacklist.md) return 0 ;;
-    */check.py) return 0 ;;
+    */check.mjs) return 0 ;;
     */agents/*.md) return 0 ;;
     */commands/*.md) return 0 ;;
     *) return 1 ;;
