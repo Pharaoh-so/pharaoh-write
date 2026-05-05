@@ -74,15 +74,72 @@ Real writing has texture. AI writing is flat. The difference is rhythm.
 **Rules:**
 - **No ending punctuation is the default** in casual contexts. For external/published content, use punctuation but keep it minimal.
 - **Vary it naturally.** 80% no punctuation doesn't mean 100%. Longer or more complete thoughts sometimes get a period. The goal is natural inconsistency - the same way you sometimes capitalize the start of a sentence and sometimes don't. If every single line is lowercase with no punctuation, that's its own kind of uniformity and reads as a style choice rather than natural writing.
-- **Capitalization follows the same principle.** Mostly lowercase in casual contexts, but first-word caps on some sentences is normal. Mix it. Don't force all-lowercase on everything - that's as artificial as forcing all-proper-case.
+- **Capitalization follows the same principle.** Mostly lowercase in casual contexts, but first-word caps on some sentences is normal. Mix it. Don't force all-lowercase on everything - that's as artificial as forcing all-proper-case. See **Format-Aware Casing Tiers** below for specific targets per format.
 - **Exclamation marks** - only for genuine excitement.
 - **Questions** - asked directly, not hedged. "Can you review?" not "Would it be possible for you to take a look?"
-- **Hyphens, not em dashes** - use single hyphens (-) for asides and pivots, max 2 per paragraph. Never use em dashes (—) or en dashes (–). This is a hard rule - LLMs default to typographic dashes and it's an obvious AI tell.
-- **ALL CAPS** - single word for emphasis: "PERFECT format" / "VERY bullish" / not whole sentences.
+- **Hyphens, not em dashes** - use single hyphens (-) for asides and pivots, max 2 per paragraph. Em dashes (—) and en dashes (–) are AI tells and should appear at most once per 500 words, only as mid-clause appositives ("the formatter — which you wrote last quarter — is broken"), never as sentence connectors. When in doubt, use a single hyphen.
+- **ALL CAPS** - single word for emphasis: "PERFECT format" / "VERY bullish" / not whole sentences. **Exception:** all-caps post titles on certain Reddit subs (e.g. r/micro_saas milestone posts) — match the sub's culture.
 - **Ellipsis** - essentially never.
 
+***
+
+## Format-Aware Casing Tiers
+
+The general rule is "vary it naturally," but agents keep failing this by locking at one extreme (100% lowercase OR 100% sentence-case). Specific targets per format register prevent that:
+
+| Format register | Caps at sentence-starts | Notes |
+|---|---|---|
+| **Chat / DM / casual reply** | 5-15% | Lowercase dominant. 1-2 caps per 15 sentence-starts to break the pattern. |
+| **Reddit post — incident-style** (lead with a scene, story-shaped) | 5-15% | Same as casual reply. Match the sub's lowercase-leaning culture. |
+| **Reddit post — essay-style** (lead with a claim, argument-shaped) | 50-70% | Sentence-case dominant. Looks more like a written piece than a typed thought. |
+| **Reddit post — milestone screenshot title** | 100% caps allowed | Title only. Body still follows tier above. |
+| **Blog post / longform** | 70-90% | Sentence-case dominant. Caps mostly natural; deliberate lowercase moments only as register shifts. |
+| **Marketing / landing copy** | 85-95% | Polished. Lowercase moments only for deliberate effect. |
+| **Email — cold/warm** | 70-90% | Email register expects sentence case. |
+
+**Two hard rules across all tiers:**
+
+1. **Pick a register, then deliberately violate it 1-3 times.** A purely consistent register (100% of either extreme) is itself an AI tell, real human typing is inconsistent. If you target 10% caps, hit ~10% AND make sure those caps are not all clustered in one paragraph.
+2. **The personal pronoun "i" stays lowercase mid-sentence in casual registers** (matching most informal English typing). When "I" starts a sentence in a sentence-case-leaning piece, capitalize it. When "i" starts a sentence in a lowercase-leaning piece, leave it lowercase.
+
+**How to count.** Find every period in the body. The next word after each period is a sentence-start. Count how many of those are capitalized vs lowercase. Compare to the target tier. The anti-ai-filter pass enforces this.
+
+**Voice anchors are for cadence, not casing.** When a brief provides a "voice anchor" (an example post in the target voice), use the anchor for rhythm, structure, and topic — never copy its casing wholesale. If the anchor is 95% lowercase and the format-tier says 60-70%, the format tier wins. The anchor is a sample, not a dictate.
+
+***
+
+## Typo Budget
+
+Real human writing has typos. AI-generated writing is grammatically perfect. The agent's drafts have been failing this; they read as polished even when the framing claims "I'm typing this at midnight."
+
+**Target: 0-1 light typos per 250 words, with 1 typo as the default for anything posted in a casual register** (chat, Reddit, social).
+
+**Acceptable typo types** (these read as natural keyboard slips):
+
+- Dropped apostrophe in contractions: `dont` for `don't`, `didnt` for `didn't`, `thats` for `that's`, `im` for `i'm`
+- "its" / "it's" mistake (most common real human typo)
+- Missing comma in a place where one technically belongs but the meaning is clear
+- "to" / "too" / "two" slip
+- Run-on without proper punctuation between two clauses
+- Dropped period at end of a fragment-shaped sentence
+- Lowercase "i" mid-sentence in a sentence-case-leaning piece (a typing-fast slip)
+
+**Unacceptable typo locations** (these read as carelessness, not naturalness):
+
+- Technical terms (function names, file paths, programming language names)
+- Product names or proper nouns
+- Numbers, dates, or load-bearing claims (anything the post's argument depends on)
+- The first sentence of the post (first impression)
+- The closing question (the bait)
+
+**Why this matters.** A grammatically perfect 250-word post in a "frustrated rant at midnight" framing reads as fake-frustrated. One light typo in the middle of the body shifts the register from "polished writer" to "actual person typing fast." Don't manufacture more than 1 — that becomes its own affectation.
+
+**For formal registers** (blog posts, marketing copy, email): typo budget is 0. These get edited.
+
+***
+
 **Never do:**
-- Use em dashes (—) or en dashes (–). Always single hyphens (-). Hard rule.
+- Use em dashes (—) or en dashes (–) as sentence connectors or list separators. They're allowed only as mid-clause appositives, max once per 500 words, per the calibrated rule above. When in doubt, single hyphen (-).
 - End every sentence with a period in casual writing
 - Use semicolons (they're pretentious in casual writing)
 - Stack exclamation marks (!!!)

@@ -404,6 +404,59 @@ Run this before publishing:
 
 ---
 
+## SECTION 6: Enforcement Loop (Programmatic Pass)
+
+The Final Checklist above is the human-eye review. This section is what the writer agent must run programmatically before returning a draft. The agent has historically failed to actually enforce the rules on its own output even when it claims to have run a final pass — because the "pass" is vibes-based.
+
+This loop is mechanical. It uses tools (grep, character counts, regex) so the check can't be hand-waved.
+
+### Step 1: Phrase blacklist grep
+
+Run `grep -Fxf phrase-blacklist.md draft.md` (and against `phrase-blacklist-local.md` if it exists). For every match, rewrite the offending sentence to achieve the same intent without the trope. Don't just delete — rewriting closes the hole.
+
+The phrase blacklist file lives next to this SKILL.md at `phrase-blacklist.md`. It contains universal AI tells (closer tropes, formal transitions, formulaic openers) that grep against the draft will catch. Add new entries when a phrase has been published before and shouldn't be reused, or when a new AI tell is identified.
+
+### Step 2: Capitalization audit
+
+Count post-period sentence-starts in the body. Compare against the format-aware target tier from `natural-voice/SKILL.md` § Format-Aware Casing Tiers:
+
+- Reddit incident-style post → 5-15% caps target
+- Reddit essay-style post → 50-70% caps target
+- Blog post / longform → 70-90% caps target
+- Casual reply / chat → 5-15% caps target
+
+If the draft is outside the target range, adjust. If outside by more than 5 percentage points in either direction, rewrite. The voice anchor (if provided in the brief) is for cadence and structure only — never copy its casing wholesale.
+
+### Step 3: Rhythm verification
+
+Every body paragraph must contain at least one rambling sentence (60+ words OR 3+ commas without a hard break). If a paragraph is purely short fragments stacked together, the rhythm is its own AI tell. Add a longer breath-sentence somewhere in that paragraph or merge with the next paragraph.
+
+The opposite check: a body paragraph cannot be entirely one long sentence either. Mix lengths. If a paragraph is 4 short fragments and a single long sentence, that's healthy. If it's 5 short fragments OR 1 long sentence, rebalance.
+
+### Step 4: Em-dash count
+
+Count em-dashes (—) and en-dashes (–) in the draft. Per `natural-voice/SKILL.md`: max 1 per 500 words, only as mid-clause appositive ("the formatter — which you wrote last quarter — is broken"). Sentence connectors and list separators must use single hyphens. If the count is over budget, replace until within budget.
+
+### Step 5: Typo budget
+
+In casual-register pieces (chat, Reddit, social, founder-voice posts): verify 1 light typo exists in the body (not in load-bearing words, not in the first sentence, not in the closing question). If the draft is grammatically perfect, introduce one acceptable typo per the `natural-voice` typo budget rules.
+
+In formal-register pieces (blog post, marketing, email): verify 0 typos. The draft should be grammatically clean.
+
+### Step 6: Voice anchor leak check
+
+If the brief provided a voice anchor (a sample post or piece in the target voice), grep the draft for verbatim phrases longer than 5 words from the anchor. Voice anchors are for rhythm and structure, not phrasebanks. Any 5+ word string copied from the anchor must be rewritten, even if the phrasing was effective in the anchor.
+
+This is the most-failed check. Agents that load a voice anchor as conditioning will pull signature phrases from it. Block this at the enforcement step, not the drafting step.
+
+### Step 7: Repeat until clean
+
+If any of steps 1-6 triggered a rewrite, run the loop again. Don't return the draft until a full pass produces zero changes.
+
+If the loop runs more than 3 times without converging, the draft probably needs a structural rewrite (the format is wrong, the voice is mismatched to the audience, or the brief itself was self-contradictory). Return the draft with a craft note explaining what wouldn't converge — better to flag than to ship a draft that quietly violates the rules.
+
+---
+
 ## Quick Reference: Search-and-Replace
 
 Copy this into your editor's find-and-replace:

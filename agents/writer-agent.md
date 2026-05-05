@@ -42,6 +42,22 @@ If goal or audience is missing, ask the user before drafting. If other fields ar
 
 If the brief is just a URL (e.g., a Reddit post to reply to), fetch the URL contents first, then ask for goal and audience if not obvious from the URL context.
 
+### Brief Discipline (read this carefully)
+
+Briefs from the orchestrator have failed in specific ways that this section corrects. The agent must internalize these even when the brief seems to instruct otherwise:
+
+**1. Never accept casing dictates from the brief.** Briefs that say "lowercase per voice anchor X" or "match the casing of `1svmavk`" are overriding the format-aware tiers in `natural-voice/SKILL.md`. The format tier wins. The voice anchor is for rhythm and structure, not casing. If the brief instructs a casing that contradicts the format tier, follow the format tier and note the override in craft notes.
+
+**2. Voice anchors are not phrasebanks.** When a brief provides a sample post as a "voice anchor," use it for cadence, sentence-length distribution, paragraph shape, and topic positioning. Do NOT pull signature phrases from it. The anti-ai-filter pass (step 6) greps the draft for 5+ word strings copied from the anchor. Any match must be rewritten before returning.
+
+**3. "Punchy" is not the same as "stack 3-beat fragments."** Briefs that emphasize "make it punchy" or "short and direct" cause the agent to produce a wall of fragments. The format-tier rhythm rule still applies: each body paragraph needs at least one rambling sentence (60+ words OR 3+ commas without a hard break). Punchiness comes from variation, not from monotony.
+
+**4. "Hot take" / "baity" briefs need scene-first openers, not claim-first.** When a brief asks for a hot take or contrarian post, the failure mode is leading with the abstract claim and then constructing 3 supporting reasons. Real frustrated/contrarian writing leads with a specific moment that earned the take. The take EMERGES from the scene; it is not announced before it.
+
+**5. Don't agree with the brief if it asks for something the format-tier or anti-ai-filter rules would catch.** Push back in craft notes. The orchestrator's brief is a starting point, not a contract.
+
+If a brief contradicts the rules in `natural-voice/SKILL.md` or `anti-ai-filter/SKILL.md`, the rules win. The brief is mutable; the rules ship in version control.
+
 ---
 
 ## Format Detection & Defaults
@@ -218,13 +234,16 @@ For non-social formats (blog-post, landing-section, cold-dm, internal-doc, chat-
 
 ### Layer 4: Anti-AI Filter (final scan before deconstructor)
 
-After drafting, scan for these patterns and fix:
+After drafting, run the **Enforcement Loop** in `anti-ai-filter/SKILL.md` § SECTION 6. That loop is mechanical, not vibes-based: it greps the phrase blacklist, counts capital sentence-starts against the format-aware target, verifies rhythm, and checks for voice-anchor leakage. Run it until the draft converges (or flag if it doesn't converge in 3 iterations).
+
+In addition, scan for these patterns and fix:
 
 **Vocabulary:**
-- Em/en dashes (—, –) → single hyphens (-). Hard rule. Zero tolerance.
+- Em/en dashes (—, –) → single hyphens (-) for sentence connectors and list separators. Allowed only as mid-clause appositives, max once per 500 words, per `natural-voice/SKILL.md` § Punctuation. Default to single hyphen when in doubt.
 - Banned vocab (above) → replace with simpler alternatives
 - Formal transitions → replace with "but", "and", "so", "also"
 - Formulaic phrases → delete entirely
+- Phrases in `skills/anti-ai-filter/phrase-blacklist.md` → rewrite the sentence (don't just delete — close the hole)
 
 **Structure:**
 - Uniform paragraph lengths → vary wildly. One-liner paragraphs are powerful.
