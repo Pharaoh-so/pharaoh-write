@@ -17,6 +17,12 @@
 #                    latest from source. Use after pulling significant updates,
 #                    or when migrating from a different agent install.
 #
+#   --link           Dev mode. Like --fresh, but creates symlinks from
+#                    ~/.claude/ to this repo instead of copying. Edits to the
+#                    repo's files are immediately reflected in your install.
+#                    Use this if you're iterating on the agent rules.
+#                    Voice corpus and protected files stay as real files.
+#
 #   --dry-run        Show what would change. No files modified.
 
 set -euo pipefail
@@ -65,15 +71,17 @@ is_protected() {
 
 SYNC_RULES=0
 FRESH=0
+LINK=0
 DRY_RUN=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sync-rules) SYNC_RULES=1; shift ;;
     --fresh|--replace) FRESH=1; shift ;;  # --replace kept as backwards-compat alias
+    --link) LINK=1; FRESH=1; shift ;;  # --link implies --fresh (need to wipe before symlinking)
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help)
-      sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+      sed -n '2,27p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
       exit 0
       ;;
     *)
@@ -85,7 +93,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if (( SYNC_RULES == 1 && FRESH == 1 )); then
-  echo "Error: --sync-rules and --fresh are mutually exclusive." >&2
+  echo "Error: --sync-rules and --fresh/--link are mutually exclusive." >&2
   exit 1
 fi
 
@@ -117,6 +125,8 @@ echo "Destination: ${CLAUDE_DIR}"
 
 if (( SYNC_RULES == 1 )); then
   echo "Mode:        ${BLUE}--sync-rules${RESET} (update managed files, preserve protected)"
+elif (( LINK == 1 )); then
+  echo "Mode:        ${BLUE}--link${RESET} (backup + wipe + symlink to ${REPO_DIR})"
 elif (( FRESH == 1 )); then
   echo "Mode:        ${RED}--fresh${RESET} (backup + wipe owned paths + install latest)"
 else
@@ -243,7 +253,7 @@ install_file() {
       echo "  ${BLUE}would ${action}${RESET} ${dst#${HOME}/}"
     else
       mkdir -p "$(dirname "${dst}")"
-      cp "${src}" "${dst}"
+      _copy_or_link "${src}" "${dst}"
       echo "  ${BLUE}${action}${RESET} ${dst#${HOME}/}"
     fi
     UPDATED=$((UPDATED + 1))
@@ -252,13 +262,34 @@ install_file() {
 
   # File does not exist - install it
   if (( DRY_RUN == 1 )); then
-    echo "  ${GREEN}would install${RESET} ${dst#${HOME}/}"
+    if (( LINK == 1 )) && ! is_protected "${dst}"; then
+      echo "  ${GREEN}would symlink${RESET} ${dst#${HOME}/} -> ${src}"
+    else
+      echo "  ${GREEN}would install${RESET} ${dst#${HOME}/}"
+    fi
   else
     mkdir -p "$(dirname "${dst}")"
-    cp "${src}" "${dst}"
-    echo "  ${GREEN}install${RESET} ${dst#${HOME}/}"
+    _copy_or_link "${src}" "${dst}"
+    if (( LINK == 1 )) && ! is_protected "${dst}"; then
+      echo "  ${GREEN}symlink${RESET} ${dst#${HOME}/} -> ${src#${HOME}/}"
+    else
+      echo "  ${GREEN}install${RESET} ${dst#${HOME}/}"
+    fi
   fi
   INSTALLED=$((INSTALLED + 1))
+}
+
+# _copy_or_link <src> <dst> - actual file operation. Symlinks if --link
+# mode AND the dst isn't a protected path (protected paths always get
+# real-file copies, since users edit them).
+_copy_or_link() {
+  local src="$1"
+  local dst="$2"
+  if (( LINK == 1 )) && ! is_protected "${dst}"; then
+    ln -sf "${src}" "${dst}"
+  else
+    cp "${src}" "${dst}"
+  fi
 }
 
 # ------------------------------------------------------------
@@ -304,6 +335,12 @@ if (( FRESH == 1 )); then
   if [[ -n "${BACKUP_DIR}" ]]; then
     echo "  Backed up: ${YELLOW}${BACKED_UP}${RESET} dirs to ${BACKUP_DIR}"
   fi
+fi
+if (( LINK == 1 )); then
+  echo ""
+  echo "${BLUE}Dev mode active.${RESET} Edits to files in ${REPO_DIR} will be reflected"
+  echo "in your install immediately. Use ${BOLD}git pull && ./install.sh --link${RESET} after"
+  echo "switching branches or pulling significant updates."
 fi
 echo ""
 

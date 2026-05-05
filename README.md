@@ -21,7 +21,14 @@ It covers the writing surfaces that most often leak AI defaults: long-form posts
 
 ## How it works
 
-Clone the repo and run `./install.sh`. The installer copies the command, agent, and skills into `~/.claude/{commands,agents,skills}/`. Seed `voice-corpus/` with samples of your own writing and edit the rules in `natural-voice` to match your register. Then call `/write` from any Claude Code session.
+Four filtering stages between your brief and the final draft:
+
+1. **Brief sanitization** - the `/write` command scrubs orchestrator anti-patterns (casing dictates, voice-anchor-as-phrasebank, "make it punchy") before the agent ever sees the brief
+2. **Drafting** - the writer-agent loads relevant skills, reads your voice corpus, drafts in isolation
+3. **Self-eval** - the agent runs a 10-question rubric and a deconstructor pass on its own output
+4. **Mechanical enforcement** - a Node.js check script (`skills/anti-ai-filter/check.mjs`) greps the draft against a phrase blacklist, counts capital sentence-starts vs format-aware targets, checks em-dash budget, scans for verbatim phrases copied from voice anchors, verifies rhythm. Exit code 0 = pass, 1 = fail. Loops until clean.
+
+The script is the load-bearing piece — it runs as a Bash tool so the agent can't claim to have run a final pass without invoking it. Zero dependencies (Node.js standard library only); anyone running Claude Code already has Node.
 
 MIT licensed. Self-hosted. Yours to fork.
 
@@ -35,17 +42,41 @@ cd pharaoh-write
 ./install.sh
 ```
 
-The installer:
-- Creates `~/.claude/{commands,agents,skills}/` if any are missing
-- Copies the command, agent, and skill files in
-- **Skips any file that already exists** - never overwrites
-- Prints a summary of what was installed and what was skipped
+Default behavior: copies the command, agent, and skill files into `~/.claude/{commands,agents,skills}/`. Skips any file that already exists - never overwrites.
 
-To re-run after pulling updates, just run `./install.sh` again. Files you've already customized stay yours.
+### Install modes
+
+| Flag | When to use |
+|---|---|
+| _(none)_ | First-time install. Skips files that already exist. |
+| `--sync-rules` | Pull rule updates without losing personalization. Updates everything except protected files (voice corpus, BRIEF_TEMPLATE, phrase-blacklist-local). |
+| `--fresh` | One-command total reinstall. Backs up existing install to `~/.claude.bak.<timestamp>/`, wipes everything pharaoh-write owns (preserving protected files), then installs latest. |
+| `--link` | Dev mode. Like `--fresh` but creates symlinks from `~/.claude/` to this repo instead of copying. Edits to repo files reflect in your install immediately. Use this if you're iterating on the agent rules. |
+| `--dry-run` | Show what would change. No files modified. Combine with any other flag. |
+
+For most users:
+- **First install:** `./install.sh`
+- **Pulling updates:** `git pull && ./install.sh --sync-rules`
+- **Big version bumps or migrations:** `git pull && ./install.sh --fresh`
+- **Iterating on the rules yourself:** `./install.sh --link` (clone stays as your edit surface)
+
+### Protected files
+
+Always preserved by `--sync-rules` and `--fresh`:
+
+- `~/.claude/skills/writer-agent/voice-corpus/` and everything inside it
+- `~/.claude/skills/writer-agent/BRIEF_TEMPLATE.md`
+- `~/.claude/skills/anti-ai-filter/phrase-blacklist-local.md` (your local additions to the phrase blacklist; ships empty, you populate it)
 
 ### Verify
 
 After install, open a Claude Code session and type `/write` - the slash command should autocomplete and show its description. If it doesn't, check `~/.claude/commands/write.md` exists.
+
+To verify the deterministic check script works:
+
+```bash
+node ~/.claude/skills/anti-ai-filter/check.mjs --help
+```
 
 ---
 
@@ -107,15 +138,17 @@ The skill's structural rules (rhythm, punctuation defaults, banned words) are un
 
 ## Uninstall
 
-The installer doesn't track what it copied, but uninstalling is straightforward:
-
 ```bash
+# Back up your voice corpus first if you want to keep it
+cp -R ~/.claude/skills/writer-agent/voice-corpus ~/voice-corpus-backup
+
+# Remove pharaoh-write managed files
 rm ~/.claude/commands/write.md
 rm ~/.claude/agents/writer-agent.md
 rm -rf ~/.claude/skills/{content-frameworks,longform-writing,startup-narrative,story-structure,natural-voice,short-reply,anti-ai-filter,writer-agent}
 ```
 
-Your voice corpus and any local edits go with it. Back up `~/.claude/skills/writer-agent/voice-corpus/` first if you want to keep your seeded examples.
+If you used `--link` mode, the same `rm` commands work — they remove the symlinks (not the files in your clone). The clone stays intact at whatever path you ran `--link` from.
 
 ---
 
