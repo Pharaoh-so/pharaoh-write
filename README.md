@@ -2,13 +2,14 @@
 
 A Claude Code toolkit for writing content that doesn't read like AI wrote it.
 
-Ships one slash command, one subagent, and seven skills. Drop it into any Claude Code session and it routes your draft through structural frameworks, voice rules, and an anti-AI filter before returning the output. No API keys, no SaaS, no account. The whole thing runs against the agent you already have.
+Ships two slash commands, one subagent, and seven skills. Drop it into any Claude Code session and it routes your draft through structural frameworks, voice rules, and an anti-AI filter before returning the output. No API keys, no SaaS, no account. The whole thing runs against the agent you already have.
 
 It covers the writing surfaces that most often leak AI defaults: long-form posts, landing pages, social replies, cold outreach, narrative work, and startup positioning copy. It does not cover product writing (UI strings, error messages, in-app microcopy) - that lives closer to the code and belongs in a different toolkit.
 
 ## What's included
 
-- **`/write`** - the single entry point. Pass a brief, get a draft plus craft notes.
+- **`/write`** - the general writing entry point. Pass a brief, get a draft plus craft notes.
+- **`/founder-feature`** - draft a short, source-checked developer product review for founder approval.
 - **`writer-agent`** - a subagent that loads the relevant skills, drafts in isolation, and runs its own self-review before returning.
 - **Seven skills:**
   - `content-frameworks` - router. Picks the right structural skills for the format.
@@ -42,7 +43,7 @@ cd pharaoh-write
 ./install.sh
 ```
 
-Default behavior: copies the command, agent, and skill files into `~/.claude/{commands,agents,skills}/`. Skips any file that already exists - never overwrites.
+Default behavior: copies the commands, agent, and skill files into `~/.claude/{commands,agents,skills}/`. Skips any file that already exists - never overwrites.
 
 ### Install modes
 
@@ -101,6 +102,15 @@ The writer-agent will load the relevant skills, read any examples in your `voice
 
 ---
 
+## Founder features
+
+```
+/founder-feature <product, developer question, and first-party URLs>
+/founder-feature <path to a private brief>
+```
+
+Run `./install.sh --sync-rules` to update an existing installation before using the new command. This mode aims for a 500 to 750 word review with one useful search question, a fair comparison, and claims you can trace. It returns copy, proposed search metadata, and private evidence notes. It never sends or publishes. The [founder-feature workflow](docs/founder-feature.md) describes the separate outreach, Ghost preview, approval, and web publication gates.
+
 ## Customize
 
 The toolkit ships with sensible defaults, but the agent's voice output is only as good as the corpus you seed and the voice rules you keep.
@@ -143,7 +153,7 @@ The skill's structural rules (rhythm, punctuation defaults, banned words) are un
 cp -R ~/.claude/skills/writer-agent/voice-corpus ~/voice-corpus-backup
 
 # Remove pharaoh-write managed files
-rm ~/.claude/commands/write.md
+rm ~/.claude/commands/{write,founder-feature}.md
 rm ~/.claude/agents/writer-agent.md
 rm -rf ~/.claude/skills/{content-frameworks,longform-writing,startup-narrative,story-structure,natural-voice,short-reply,anti-ai-filter,writer-agent}
 ```

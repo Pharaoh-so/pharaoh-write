@@ -18,6 +18,7 @@
  *   reddit-reply           5-15%
  *   chat                   5-15%
  *   blog-post              70-90%
+ *   founder-feature        95-100% (casing and rhythm advisory)
  *   longform               70-90%
  *   marketing              85-95%
  *   email                  70-90%
@@ -39,6 +40,7 @@ const FORMAT_TIERS = {
   chat: [5, 15],
   "casual-reply": [5, 15],
   "blog-post": [70, 90],
+  "founder-feature": [95, 100],
   longform: [70, 90],
   marketing: [85, 95],
   landing: [85, 95],
@@ -240,6 +242,7 @@ function main() {
   const wordCount = countWords(bodyText);
 
   const failures = [];
+  const advisoryCadence = args.format === "founder-feature";
 
   console.log("=== Anti-AI Filter Check ===");
   console.log(`Draft: ${draftPath}`);
@@ -268,7 +271,9 @@ function main() {
   console.log(
     `CASING: target ${targetMin}-${targetMax}% caps, measured ${pct}% (${caps}/${total} starts)`,
   );
-  if (total > 0 && (pct < targetMin - 5 || pct > targetMax + 5)) {
+  if (advisoryCadence && total > 0 && (pct < targetMin || pct > targetMax)) {
+    console.log("  WARN: outside advisory technical sentence-case target");
+  } else if (total > 0 && (pct < targetMin - 5 || pct > targetMax + 5)) {
     console.log("  FAIL: outside target range");
     if (pct < targetMin) {
       const need = Math.floor(((targetMin - pct) * total) / 100) + 1;
@@ -315,9 +320,10 @@ function main() {
   // 5. Rhythm
   const rhythmFailures = checkRhythm(paragraphs);
   if (rhythmFailures.length > 0) {
-    console.log(`RHYTHM: FAIL (${rhythmFailures.length} paragraph(s) without rambling sentence)`);
+    const label = advisoryCadence ? "WARN" : "FAIL";
+    console.log(`RHYTHM: ${label} (${rhythmFailures.length} paragraph(s) without rambling sentence)`);
     for (const f of rhythmFailures) console.log(`  - ${f}`);
-    failures.push(`rhythm: ${rhythmFailures.length} paragraph(s)`);
+    if (!advisoryCadence) failures.push(`rhythm: ${rhythmFailures.length} paragraph(s)`);
   } else {
     console.log("RHYTHM: PASS (all body paragraphs have ≥1 rambling sentence or are short)");
   }

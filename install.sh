@@ -40,7 +40,7 @@ CLAUDE_DIR="${HOME}/.claude"
 # Anything OUTSIDE these paths is never touched, regardless of flags.
 
 OWNED_AGENTS=("writer-agent.md")
-OWNED_COMMANDS=("write.md")
+OWNED_COMMANDS=("write.md" "founder-feature.md")
 OWNED_SKILLS=(
   "anti-ai-filter"
   "content-frameworks"
